@@ -14,7 +14,7 @@
     -->
 
     <!-- Add module specific messages and labels -->
-    <bean id="com.nick.share-amp.resources"
+    <bean id="${project.artifactId}-amp.resources"
           class="org.springframework.extensions.surf.util.ResourceBundleBootstrapComponent">
         <property name="resourceBundles">
             <list>
