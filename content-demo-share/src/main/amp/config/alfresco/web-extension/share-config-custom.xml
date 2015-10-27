@@ -45,8 +45,6 @@
 					<show id="my:clientName" />
 					<show id="cm:title" force="true" />
 					<show id="cm:description" force="true" />
-					<show id="my:totalAmount" />
-					<show id="my:expenseType" />
 				</field-visibility>
 				<appearance>
 					<field id="my:product" label-id="prop.my_product" />
