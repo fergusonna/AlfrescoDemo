@@ -87,8 +87,6 @@
 			<visible>
 				<aspect name="my:publishToWeb" />
 				<aspect name="my:clientRelated" />
-				<aspect name="my:totalAmount" />
-				<aspect name="my:expenseType" />
 			</visible>
    		</aspects>
    		
