@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Definition of new Model -->
+<model name="mywf:workflowmodel" xmlns="http://www.alfresco.org/model/dictionary/1.0">
+	
+	<!-- Optional Meta-data about the model -->
+	<description>My Workflow Model</description>
+	<author>Nick Ferguson</author>
+	<version>1.0</version>
+	
+	<!-- Imports are required to allow the references to definitions in other models -->
+	<imports>
+		<import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d" />
+		<import uri="http://www.alfresco.org/model/bpm/1.0" prefix="bpm" />
+	</imports>
+	
+	<!-- Introduction of new namespaces defined by thie model -->
+	<namespaces>
+		<namespace uri="http://www.mycompany.com/model/workflow/1.0" prefix="mywf" />
+	</namespaces>
+	
+	<types>
+		<type name="mywf:submitHelloWorldTask">
+			<parent>bpm:startTask</parent>
+			<properties>
+				<property name="mywf:helloName">
+					<type>d:text</type>
+					<mandatory>true</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</type>
+	</types>
+	
+</model>

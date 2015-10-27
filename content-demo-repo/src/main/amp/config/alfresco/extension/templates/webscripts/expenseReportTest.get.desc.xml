@@ -1,0 +1,8 @@
+<webscript>
+	<shortname>Expense Report Test</shortname>
+	<family>Nick</family>
+	<desription>This creates content of my Expense Report type</desription>
+	<url>/expenseReportTest/{documentName}</url>
+	<format default="html">extension</format>
+	<authentication>user</authentication>
+</webscript>
