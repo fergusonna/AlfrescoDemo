@@ -10,6 +10,11 @@
 				<value>alfresco/extension/customModel.xml</value>
 			</list>
 		</property>
+		<property name="labels">
+        	<list>
+        		<value>alfresco/module/${project.artifactId}/messages/customModel</value>
+        	</list>
+        </property>
 	</bean>
 	
 </beans>

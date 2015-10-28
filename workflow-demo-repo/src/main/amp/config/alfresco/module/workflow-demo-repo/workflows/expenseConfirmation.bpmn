@@ -2,10 +2,21 @@
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
   <process id="expenseConfirmation" name="Expense Report Confirmation" isExecutable="true">
     <startEvent id="startevent1" name="Start" activiti:formKey="mywf:submitExpenseReport"></startEvent>
-    <scriptTask id="expenseSubmitted" name="Expense Submitted" activiti:autoStoreVariables="true" scriptFormat="javascript">
+    <serviceTask id="expenseSubmitted" name="Expense Submitted" activiti:class="org.alfresco.repo.workflow.activiti.script.AlfrescoScriptDelegate">
     	<!-- Two variables tracking approval by accounting and third party  -->
-    	<script><![CDATA[var mywf_accApproved = false; var mywf_tpApproved = false;]]></script>
-    </scriptTask>
+    	<extensionElements>
++   		<activiti:field name="runAs">
++   			<activiti:string><![CDATA[admin]]></activiti:string>
++   		</activiti:field>
++   		<activiti:field name="script">
++   			<activiti:string><![CDATA[
++   				execution.setVariable('mywf_accApproved', false);
++   				execution.setVariable('mywf_tpApproved', false);
++   			]]>
+				</activiti:string>
++   		</activiti:field>
++   	</extensionElements>
+    </serviceTask>
     <userTask id="accountingReview" name="Accounting Review" activiti:candidateGroups="GROUP_Accounting" activiti:formKey="mywf:activitiAccountingReview">
     	<extensionElements>
     		<activiti:taskListener event="complete" class="org.alfresco.repo.workflow.activiti.tasklistener.ScriptTaskListener">
