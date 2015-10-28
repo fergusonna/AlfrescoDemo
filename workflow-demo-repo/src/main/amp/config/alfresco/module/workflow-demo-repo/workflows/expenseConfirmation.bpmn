@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
+  <process id="expenseConfirmation" name="Expense Report Confirmation" isExecutable="true">
+    <startEvent id="startevent1" name="Start" activiti:formKey="mywf:submitExpenseReport"></startEvent>
+    <scriptTask id="expenseSubmitted" name="Expense Submitted" activiti:autoStoreVariables="true" scriptFormat="javascript">
+    	<!-- Two variables tracking approval by accounting and third party  -->
+    	<script><![CDATA[var mywf_accApproved = false; var mywf_tpApproved = false;]]></script>
+    </scriptTask>
+    <userTask id="accountingReview" name="Accounting Review" activiti:candidateGroups="GROUP_Accounting" activiti:formKey="mywf:activitiAccountingReview">
+    	<extensionElements>
+    		<activiti:taskListener event="complete" class="org.alfresco.repo.workflow.activiti.tasklistener.ScriptTaskListener">
+    			<activiti:field name="script">
+    				if(task.getVariableLocal('mywf_approveRejectOutcome') == 'Approve') {
+    					execution.setVariable('mywf_accApproved', true);
+    				}
+    			</activiti:field>
+    		</activiti:taskListener>
+    	</extensionElements>
+    </userTask>
+    <userTask id="creatorRevision" name="Expense Report Creator Revision" activiti:assignee="${initiator.properties.userName}" activiti:formKey="mywf:activitiRevise">
+    	<extensionElements>
+    		<activiti:taskListener event="complete" class="org.alfresco.repo.workflow.activiti.taskListener.ScriptTaskListener">
+    			<activiti:field name="script">
+    				<activiti:string>
+    					if(task.getVariableLocal('mywf_reviseOutcome') == 'Re-submit') {
+		    				execution.setVariable('mywf_resubmit', true);
+		    			} else {
+		    				execution.setVariable('mywf_resubmit', false);
+		    			}
+    				</activiti:string>
+    			</activiti:field>
+    		</activiti:taskListener>
+    	</extensionElements>
+    </userTask>
+    <exclusiveGateway id="exclusivegateway1" name="Exclusive Gateway"></exclusiveGateway>
+    <userTask id="thirdPartyReview" name="Third Party Review" activiti:assignee="${initiator.properties.userName}" activiti:formKey="mywf:activitiThirdPartyReview">
+    	<extensionElements>
+    		<activiti:taskListener event="complete" class="org.alfresco.repo.workflow.activiti.taskListener.ScriptTaskListener">
+    			<activiti:field name="script">
+    				<activiti:string>
+    					if(task.getVariableLocal('mywf_approveRejectOutcome') == 'Approve'){
+    						execution.setVariable('mywf_tpApproved', true);
+    					} else {
+    						exection.setVariable('mywf_tpApproved', false);
+    					}
+    				</activiti:string>
+    			</activiti:field>
+    		</activiti:taskListener>
+    	</extensionElements>
+    </userTask>
+    <userTask id="expenseApproved" name="Expense Report Approved" activiti:assignee="${initiator.properties.userName}" activiti:formKey="mywf:activitiExpenseApproved"></userTask>
+    <endEvent id="endevent1" name="End"></endEvent>
+    <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="expenseSubmitted"></sequenceFlow>
+    <sequenceFlow id="submitToAccounting" sourceRef="expenseSubmitted" targetRef="accountingReview"></sequenceFlow>
+    <sequenceFlow id="expenseRevised" sourceRef="creatorRevision" targetRef="expenseSubmitted">
+    	<!-- Rejected expense report is revised and resubmitted -->
+    	<conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_resubmit == true}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="thirdPartyConfirmation" sourceRef="exclusivegateway1" targetRef="thirdPartyReview">
+    	<!-- This path is only taken if a thirdParty email was submitted -->
+    	<conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_reviewerEmail != ''}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="thirdPartyRejection" sourceRef="thirdPartyReview" targetRef="creatorRevision">
+    	<!-- Third Party rejected expense report -->
+    	<conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_tpApproved == false}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="thirdPartyApproved" sourceRef="thirdPartyReview" targetRef="expenseApproved">
+    	<!-- Third party approved expense report -->
+    	<conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_tpApproved == false}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="noThirdPartyConfirmation" sourceRef="exclusivegateway1" targetRef="expenseApproved">
+    	<!-- If there is no third party email, this path is taken after accounting's approval. -->
+    	<conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_reviewerEmail == ''}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="expenseApprovedall" sourceRef="expenseApproved" targetRef="endevent1">
+    	<!-- Expense Report is approved by accounting and a third party. -->
+    </sequenceFlow>
+    <sequenceFlow id="expenseReportCanceled" sourceRef="creatorRevision" targetRef="endevent1">
+    	<!-- Expense Report creator decides not to resubmit -->
+    	<conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_resubmit == false}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="accountingApproved" sourceRef="accountingReview" targetRef="exclusivegateway1">
+    	<!-- If accounting approved, take this path -->
+    	<conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_accApproved == true}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="accountingRejected" sourceRef="accountingReview" targetRef="creatorRevision">
+    	<!-- If accounting rejected, take this path -->
+    	<conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_accApproved == false}]]></conditionExpression>
+    </sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_expenseConfirmation">
+    <bpmndi:BPMNPlane bpmnElement="expenseConfirmation" id="BPMNPlane_expenseConfirmation">
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="100.0" y="200.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="expenseSubmitted" id="BPMNShape_expenseSubmitted">
+        <omgdc:Bounds height="55.0" width="105.0" x="220.0" y="190.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="accountingReview" id="BPMNShape_accountingReview">
+        <omgdc:Bounds height="55.0" width="105.0" x="460.0" y="190.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="creatorRevision" id="BPMNShape_creatorRevision">
+        <omgdc:Bounds height="65.0" width="105.0" x="460.0" y="380.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway1" id="BPMNShape_exclusivegateway1">
+        <omgdc:Bounds height="40.0" width="40.0" x="692.0" y="197.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="thirdPartyReview" id="BPMNShape_thirdPartyReview">
+        <omgdc:Bounds height="55.0" width="105.0" x="660.0" y="301.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="expenseApproved" id="BPMNShape_expenseApproved">
+        <omgdc:Bounds height="65.0" width="105.0" x="880.0" y="185.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="1100.0" y="200.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+        <omgdi:waypoint x="135.0" y="217.0"></omgdi:waypoint>
+        <omgdi:waypoint x="220.0" y="217.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="submitToAccounting" id="BPMNEdge_submitToAccounting">
+        <omgdi:waypoint x="325.0" y="217.0"></omgdi:waypoint>
+        <omgdi:waypoint x="460.0" y="217.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="expenseRevised" id="BPMNEdge_expenseRevised">
+        <omgdi:waypoint x="460.0" y="412.0"></omgdi:waypoint>
+        <omgdi:waypoint x="272.0" y="412.0"></omgdi:waypoint>
+        <omgdi:waypoint x="272.0" y="245.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="thirdPartyConfirmation" id="BPMNEdge_thirdPartyConfirmation">
+        <omgdi:waypoint x="712.0" y="237.0"></omgdi:waypoint>
+        <omgdi:waypoint x="712.0" y="301.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="thirdPartyRejection" id="BPMNEdge_thirdPartyRejection">
+        <omgdi:waypoint x="712.0" y="356.0"></omgdi:waypoint>
+        <omgdi:waypoint x="607.0" y="371.0"></omgdi:waypoint>
+        <omgdi:waypoint x="512.0" y="380.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="thirdPartyApproved" id="BPMNEdge_thirdPartyApproved">
+        <omgdi:waypoint x="765.0" y="328.0"></omgdi:waypoint>
+        <omgdi:waypoint x="932.0" y="328.0"></omgdi:waypoint>
+        <omgdi:waypoint x="932.0" y="250.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="noThirdPartyConfirmation" id="BPMNEdge_noThirdPartyConfirmation">
+        <omgdi:waypoint x="732.0" y="217.0"></omgdi:waypoint>
+        <omgdi:waypoint x="880.0" y="217.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="expenseApprovedall" id="BPMNEdge_expenseApprovedall">
+        <omgdi:waypoint x="985.0" y="217.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1100.0" y="217.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="expenseReportCanceled" id="BPMNEdge_expenseReportCanceled">
+        <omgdi:waypoint x="565.0" y="412.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1117.0" y="412.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1117.0" y="235.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="accountingApproved" id="BPMNEdge_accountingApproved">
+        <omgdi:waypoint x="565.0" y="217.0"></omgdi:waypoint>
+        <omgdi:waypoint x="692.0" y="217.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="accountingRejected" id="BPMNEdge_accountingRejected">
+        <omgdi:waypoint x="512.0" y="245.0"></omgdi:waypoint>
+        <omgdi:waypoint x="512.0" y="380.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
