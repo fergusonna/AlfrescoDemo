@@ -53,6 +53,12 @@
 	                <prop key="mimetype">text/xml</prop>
 	                <prop key="redeploy">false</prop>
 	            </props>
+	            <props>
+	                <prop key="engineId">activiti</prop>
+	                <prop key="location">alfresco/module/${project.artifactId}/workflows/expenseConfirmation.bpmn</prop>
+	                <prop key="mimetype">text/xml</prop>
+	                <prop key="redeploy">false</prop>
+	            </props>
     	    </list>
     	</property>
     	<property name="models">

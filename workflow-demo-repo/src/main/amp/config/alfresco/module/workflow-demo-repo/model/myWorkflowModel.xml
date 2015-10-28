@@ -29,6 +29,94 @@
 				</property>
 			</properties>
 		</type>
+	
+		<!-- expense report workflow -->
+		<type name="mywf:submitExpenseReport">
+		    <parent>bpm:startTask</parent>
+		    <mandatory-aspects>
+		        <aspect>mywf:thirdPartyReviewable</aspect>
+		    </mandatory-aspects>
+		</type>
+		<type name="mywf:activitiAccountingReview">
+		    <parent>mywf:activitiReviewTask</parent>
+		</type>
+		<type name="mywf:activitiThirdPartyReview">
+		    <parent>mywf:activitiReviewTask</parent>
+		</type>
+		<type name="mywf:activitiRevise">
+		    <parent>bpm:activitiOutcomeTask</parent>
+		    <properties>
+		        <property name="mywf:reviseOutcome">
+		            <type>d:text</type>
+		            <default>Abort</default>
+		            <constraints>
+		                <constraint type="LIST">
+		                    <parameter name="allowedValues">
+		                        <list>
+		                            <value>Re-submit</value>
+		                            <value>Abort</value>
+		                        </list>
+		                    </parameter>
+		                </constraint>
+		            </constraints>
+		        </property>
+		    </properties>
+		    <overrides>
+		        <property name="bpm:packageItemActionGroup">
+		        <default>edit_package_item_actions</default>
+		        </property>
+		        <property name="bpm:outcomePropertyName">
+		        <default>{http://www.mycompany.com/model/workflow/1.0}reviseOutcome</default>
+		        </property>
+		    </overrides>
+		</type>
+		<type name="mywf:activitiReviewTask">
+		    <parent>bpm:activitiOutcomeTask</parent>
+		    <properties>
+		        <property name="mywf:approveRejectOutcome">
+		            <type>d:text</type>
+		            <default>Reject</default>
+		            <constraints>
+		                <constraint type="LIST">
+		                    <parameter name="allowedValues">
+		                        <list>
+		                            <value>Approve</value>
+		                            <value>Reject</value>
+		                        </list>
+		                    </parameter>
+		                </constraint>
+		            </constraints>
+		        </property>
+		    </properties>
+		    <overrides>
+		        <property name="bpm:packageItemActionGroup">
+		            <default>read_package_item_actions</default>
+		        </property>
+		        <property name="bpm:outcomePropertyName">
+		            <default>{http://www.mycompany.com/model/workflow/1.0}approveRejectOutcome</default>
+		        </property>
+		    </overrides>
+		</type>
+		<type name="mywf:activitiApprovedNotification">
+		    <parent>bpm:workflowTask</parent>
+		    <overrides>
+		        <property name="bpm:packageItemActionGroup">
+		            <default>read_package_item_actions</default>
+		        </property>
+		    </overrides>
+		</type>
 	</types>
 	
+	<aspects>
+	    <aspect name="mywf:thirdPartyReviewable">
+	        <title>My Third Party Reviewable</title>
+	        <properties>
+	            <property name="mywf:reviewerEmail">
+	                <type>d:text</type>
+	                <mandatory>false</mandatory>
+	                <multiple>false</multiple>
+	            </property>
+	        </properties>
+	    </aspect>
+	</aspects>
 </model>
