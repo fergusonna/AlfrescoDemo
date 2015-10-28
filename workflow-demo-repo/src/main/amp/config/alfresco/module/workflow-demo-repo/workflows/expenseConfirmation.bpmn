@@ -3,100 +3,77 @@
   <process id="expenseConfirmation" name="Expense Report Confirmation" isExecutable="true">
     <startEvent id="startevent1" name="Start" activiti:formKey="mywf:submitExpenseReport"></startEvent>
     <serviceTask id="expenseSubmitted" name="Expense Submitted" activiti:class="org.alfresco.repo.workflow.activiti.script.AlfrescoScriptDelegate">
-    	<!-- Two variables tracking approval by accounting and third party  -->
-    	<extensionElements>
-   			<activiti:field name="runAs">
-   				<activiti:string><![CDATA[admin]]></activiti:string>
-   			</activiti:field>
-   			<activiti:field name="script">
-   				<activiti:string><![CDATA[
-   					execution.setVariable('mywf_accApproved', false);
-   					execution.setVariable('mywf_tpApproved', false);
-   				]]>
-				</activiti:string>
-   			</activiti:field>
-	   	</extensionElements>
+      <extensionElements>
+        <activiti:field name="runAs">
+          <activiti:string><![CDATA[admin]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="script">
+          <activiti:string><![CDATA[execution.setVariable('mywf_accApproved', false);
+execution.setVariable('mywf_tpApproved', false);
+logger.log("MAKSUD");]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
     </serviceTask>
     <userTask id="accountingReview" name="Accounting Review" activiti:candidateGroups="GROUP_Accounting" activiti:formKey="mywf:activitiAccountingReview">
-    	<extensionElements>
-    		<activiti:taskListener event="complete" class="org.alfresco.repo.workflow.activiti.tasklistener.ScriptTaskListener">
-    			<activiti:field name="script">
-    				if(task.getVariableLocal('mywf_approveRejectOutcome') == 'Approve') {
-    					execution.setVariable('mywf_accApproved', true);
-    				}
-    			</activiti:field>
-    		</activiti:taskListener>
-    	</extensionElements>
+      <extensionElements>
+        <activiti:taskListener event="complete" class="org.alfresco.repo.workflow.activiti.tasklistener.ScriptTaskListener">
+          <activiti:field name="script">
+            <activiti:string><![CDATA[if(task.getVariableLocal('mywf_approveRejectOutcome') == 'Approve') { execution.setVariable('mywf_accApproved', true);}]]></activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+      </extensionElements>
     </userTask>
     <userTask id="creatorRevision" name="Expense Report Creator Revision" activiti:assignee="${initiator.properties.userName}" activiti:formKey="mywf:activitiRevise">
-    	<extensionElements>
-    		<activiti:taskListener event="complete" class="org.alfresco.repo.workflow.activiti.taskListener.ScriptTaskListener">
-    			<activiti:field name="script">
-    				<activiti:string>
-    					if(task.getVariableLocal('mywf_reviseOutcome') == 'Re-submit') {
-		    				execution.setVariable('mywf_resubmit', true);
-		    			} else {
-		    				execution.setVariable('mywf_resubmit', false);
-		    			}
-    				</activiti:string>
-    			</activiti:field>
-    		</activiti:taskListener>
-    	</extensionElements>
+      <extensionElements>
+        <activiti:taskListener event="complete" class="org.alfresco.repo.workflow.activiti.tasklistener.ScriptTaskListener">
+          <activiti:field name="script">
+            <activiti:string><![CDATA[if(task.getVariableLocal('mywf_reviseOutcome') == 'Re-submit') {execution.setVariable('mywf_resubmit', true);} else {execution.setVariable('mywf_resubmit', false);}]]></activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+      </extensionElements>
     </userTask>
     <exclusiveGateway id="exclusivegateway1" name="Exclusive Gateway"></exclusiveGateway>
     <userTask id="thirdPartyReview" name="Third Party Review" activiti:assignee="${initiator.properties.userName}" activiti:formKey="mywf:activitiThirdPartyReview">
-    	<extensionElements>
-    		<activiti:taskListener event="complete" class="org.alfresco.repo.workflow.activiti.taskListener.ScriptTaskListener">
-    			<activiti:field name="script">
-    				<activiti:string>
-    					if(task.getVariableLocal('mywf_approveRejectOutcome') == 'Approve'){
+      <extensionElements>
+        <activiti:taskListener event="complete" class="org.alfresco.repo.workflow.activiti.tasklistener.ScriptTaskListener">
+          <activiti:field name="script">
+            <activiti:string><![CDATA[if(task.getVariableLocal('mywf_approveRejectOutcome') == 'Approve'){
     						execution.setVariable('mywf_tpApproved', true);
     					} else {
     						exection.setVariable('mywf_tpApproved', false);
-    					}
-    				</activiti:string>
-    			</activiti:field>
-    		</activiti:taskListener>
-    	</extensionElements>
+    					}]]></activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+      </extensionElements>
     </userTask>
     <userTask id="expenseApproved" name="Expense Report Approved" activiti:assignee="${initiator.properties.userName}" activiti:formKey="mywf:activitiExpenseApproved"></userTask>
     <endEvent id="endevent1" name="End"></endEvent>
     <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="expenseSubmitted"></sequenceFlow>
     <sequenceFlow id="submitToAccounting" sourceRef="expenseSubmitted" targetRef="accountingReview"></sequenceFlow>
     <sequenceFlow id="expenseRevised" sourceRef="creatorRevision" targetRef="expenseSubmitted">
-    	<!-- Rejected expense report is revised and resubmitted -->
-    	<conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_resubmit == true}]]></conditionExpression>
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_resubmit == true}]]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="thirdPartyConfirmation" sourceRef="exclusivegateway1" targetRef="thirdPartyReview">
-    	<!-- This path is only taken if a thirdParty email was submitted -->
-    	<conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_reviewerEmail != ''}]]></conditionExpression>
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_reviewerEmail != ''}]]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="thirdPartyRejection" sourceRef="thirdPartyReview" targetRef="creatorRevision">
-    	<!-- Third Party rejected expense report -->
-    	<conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_tpApproved == false}]]></conditionExpression>
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_tpApproved == false}]]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="thirdPartyApproved" sourceRef="thirdPartyReview" targetRef="expenseApproved">
-    	<!-- Third party approved expense report -->
-    	<conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_tpApproved == false}]]></conditionExpression>
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_tpApproved == false}]]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="noThirdPartyConfirmation" sourceRef="exclusivegateway1" targetRef="expenseApproved">
-    	<!-- If there is no third party email, this path is taken after accounting's approval. -->
-    	<conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_reviewerEmail == ''}]]></conditionExpression>
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_reviewerEmail == ''}]]></conditionExpression>
     </sequenceFlow>
-    <sequenceFlow id="expenseApprovedall" sourceRef="expenseApproved" targetRef="endevent1">
-    	<!-- Expense Report is approved by accounting and a third party. -->
-    </sequenceFlow>
+    <sequenceFlow id="expenseApprovedall" sourceRef="expenseApproved" targetRef="endevent1"></sequenceFlow>
     <sequenceFlow id="expenseReportCanceled" sourceRef="creatorRevision" targetRef="endevent1">
-    	<!-- Expense Report creator decides not to resubmit -->
-    	<conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_resubmit == false}]]></conditionExpression>
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_resubmit == false}]]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="accountingApproved" sourceRef="accountingReview" targetRef="exclusivegateway1">
-    	<!-- If accounting approved, take this path -->
-    	<conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_accApproved == true}]]></conditionExpression>
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_accApproved == true}]]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="accountingRejected" sourceRef="accountingReview" targetRef="creatorRevision">
-    	<!-- If accounting rejected, take this path -->
-    	<conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_accApproved == false}]]></conditionExpression>
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_accApproved == false}]]></conditionExpression>
     </sequenceFlow>
   </process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_expenseConfirmation">
