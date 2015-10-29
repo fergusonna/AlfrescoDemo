@@ -14,15 +14,15 @@
             <list>
                 <value>alfresco/module/${project.artifactId}/model/content-model.xml</value>
                 <value>alfresco/module/${project.artifactId}/model/workflow-model.xml</value>
+                <value>alfresco/module/${project.artifactId}/model/customModel.xml</value>
             </list>
         </property>
-        <property name="labels">
+		<property name="labels">
         	<list>
         		<value>alfresco/module/${project.artifactId}/messages/customModel</value>
         	</list>
         </property>
     </bean>
 	
-
 
 </beans>
