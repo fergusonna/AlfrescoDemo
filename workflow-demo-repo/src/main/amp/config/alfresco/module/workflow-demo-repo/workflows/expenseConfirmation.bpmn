@@ -10,7 +10,19 @@
         <activiti:field name="script">
           <activiti:string><![CDATA[execution.setVariable('mywf_accApproved', false);
 execution.setVariable('mywf_tpApproved', false);
-logger.log("MAKSUD");]]></activiti:string>
+
+if (bpm_package.children.length > 0){
+	var docName = bpm_package.children[0].properties['cm:name'];
+	execution.setVariable('mywf_reportExists', true);
+	if  (logger.isLoggingEnabled()){
+		logger.log("Expense report named " + docName +" was submitted");
+	}
+} else {
+	execution.setVariable('mywf_reportExists', false);
+	if  (logger.isLoggingEnabled()){
+		logger.log("Error: No expense report was attached to workflow. Ending workflow.");
+	}
+}]]></activiti:string>
         </activiti:field>
       </extensionElements>
     </serviceTask>
@@ -18,7 +30,12 @@ logger.log("MAKSUD");]]></activiti:string>
       <extensionElements>
         <activiti:taskListener event="complete" class="org.alfresco.repo.workflow.activiti.tasklistener.ScriptTaskListener">
           <activiti:field name="script">
-            <activiti:string><![CDATA[if(task.getVariableLocal('mywf_approveRejectOutcome') == 'Approve') { execution.setVariable('mywf_accApproved', true);}]]></activiti:string>
+            <activiti:string><![CDATA[if(task.getVariableLocal('mywf_approveRejectOutcome') == 'Approve') {
+	execution.setVariable('mywf_accApproved', true);
+}
+if(logger.isLoggingEnabled()){
+	logger.log("Expense report was set for Accounting review");
+}]]></activiti:string>
           </activiti:field>
         </activiti:taskListener>
       </extensionElements>
@@ -27,7 +44,14 @@ logger.log("MAKSUD");]]></activiti:string>
       <extensionElements>
         <activiti:taskListener event="complete" class="org.alfresco.repo.workflow.activiti.tasklistener.ScriptTaskListener">
           <activiti:field name="script">
-            <activiti:string><![CDATA[if(task.getVariableLocal('mywf_reviseOutcome') == 'Re-submit') {execution.setVariable('mywf_resubmit', true);} else {execution.setVariable('mywf_resubmit', false);}]]></activiti:string>
+            <activiti:string><![CDATA[if(task.getVariableLocal('mywf_reviseOutcome') == 'Re-submit') {
+execution.setVariable('mywf_resubmit', true);
+} else {
+execution.setVariable('mywf_resubmit', false);
+}
+if  (logger.isLoggingEnabled()){
+	logger.log("Expense report was sent to be revised");
+}]]></activiti:string>
           </activiti:field>
         </activiti:taskListener>
       </extensionElements>
@@ -38,10 +62,13 @@ logger.log("MAKSUD");]]></activiti:string>
         <activiti:taskListener event="complete" class="org.alfresco.repo.workflow.activiti.tasklistener.ScriptTaskListener">
           <activiti:field name="script">
             <activiti:string><![CDATA[if(task.getVariableLocal('mywf_approveRejectOutcome') == 'Approve'){
-    						execution.setVariable('mywf_tpApproved', true);
-    					} else {
-    						exection.setVariable('mywf_tpApproved', false);
-    					}]]></activiti:string>
+	execution.setVariable('mywf_tpApproved', true);
+} else {
+	exection.setVariable('mywf_tpApproved', false);
+}
+if  (logger.isLoggingEnabled()){
+	logger.log("Expense report reached 3rd party review step.");
+}]]></activiti:string>
           </activiti:field>
         </activiti:taskListener>
       </extensionElements>
@@ -49,7 +76,6 @@ logger.log("MAKSUD");]]></activiti:string>
     <userTask id="expenseApproved" name="Expense Report Approved" activiti:assignee="${initiator.properties.userName}" activiti:formKey="mywf:activitiExpenseApproved"></userTask>
     <endEvent id="endevent1" name="End"></endEvent>
     <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="expenseSubmitted"></sequenceFlow>
-    <sequenceFlow id="submitToAccounting" sourceRef="expenseSubmitted" targetRef="accountingReview"></sequenceFlow>
     <sequenceFlow id="expenseRevised" sourceRef="creatorRevision" targetRef="expenseSubmitted">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_resubmit == true}]]></conditionExpression>
     </sequenceFlow>
@@ -75,6 +101,7 @@ logger.log("MAKSUD");]]></activiti:string>
     <sequenceFlow id="accountingRejected" sourceRef="accountingReview" targetRef="creatorRevision">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${mywf_accApproved == false}]]></conditionExpression>
     </sequenceFlow>
+    <sequenceFlow id="flow2" sourceRef="expenseSubmitted" targetRef="accountingReview"></sequenceFlow>
   </process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_expenseConfirmation">
     <bpmndi:BPMNPlane bpmnElement="expenseConfirmation" id="BPMNPlane_expenseConfirmation">
@@ -105,10 +132,6 @@ logger.log("MAKSUD");]]></activiti:string>
       <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
         <omgdi:waypoint x="135.0" y="217.0"></omgdi:waypoint>
         <omgdi:waypoint x="220.0" y="217.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="submitToAccounting" id="BPMNEdge_submitToAccounting">
-        <omgdi:waypoint x="325.0" y="217.0"></omgdi:waypoint>
-        <omgdi:waypoint x="460.0" y="217.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="expenseRevised" id="BPMNEdge_expenseRevised">
         <omgdi:waypoint x="460.0" y="412.0"></omgdi:waypoint>
@@ -149,6 +172,10 @@ logger.log("MAKSUD");]]></activiti:string>
       <bpmndi:BPMNEdge bpmnElement="accountingRejected" id="BPMNEdge_accountingRejected">
         <omgdi:waypoint x="512.0" y="245.0"></omgdi:waypoint>
         <omgdi:waypoint x="512.0" y="380.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+        <omgdi:waypoint x="325.0" y="217.0"></omgdi:waypoint>
+        <omgdi:waypoint x="460.0" y="217.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
