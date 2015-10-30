@@ -1,6 +1,5 @@
 <alfresco-config>
 	<!-- Form customization for whitepaper -->
-	
 	<config evaluator="model-type" condition="my:whitepaper">
 		<forms>
 			<form>
