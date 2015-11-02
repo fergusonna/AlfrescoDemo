@@ -1,8 +1,0 @@
-<webscript>
-	<shortname>Whitepaper Test</shortname>
-	<family>Nick</family>
-	<description>Creates content of a custom type</description>
-	<url>/whitepapertest/{documentName}</url>
-	<format default="html">extension</format>
-	<authentication>user</authentication>
-</webscript>

@@ -4,6 +4,4 @@
 	<li>${document.type}</li>
 </ul>
 
-
 <b>${msg}</b><br>
-<b><i>WOO</i></b>
