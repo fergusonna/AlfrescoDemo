@@ -6,11 +6,11 @@ documentName += "_" + currentTimeMillis.toString();
 var randNum = Math.random()*100; //used to randomize set properties
 
 //Folder for my place reports into
-var folder = companyhome.childByNamePath("_ExpenseReports");
+var folder = companyhome.childByNamePath("MyCo");
 
 //If folder doesn't exist, then it is created
 if (folder == undefined){
-	folder = companyhome.createFolder("_ExpenseReports");
+	folder = companyhome.createFolder("MyCo");
 }
 
 //Array to keep the properties in.
