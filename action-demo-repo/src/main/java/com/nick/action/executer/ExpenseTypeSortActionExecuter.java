@@ -15,7 +15,7 @@ import org.alfresco.service.namespace.QName;
 import org.apache.log4j.Logger;
 import org.alfresco.model.ContentModel;
 import com.nick.model.MyCoModel;
-
+import com.nick.model.MyCoBehaviorModel;
 /**
  * @author Nick Ferguson
  *
@@ -138,7 +138,11 @@ public class ExpenseTypeSortActionExecuter extends ActionExecuterAbstractBase{
 			if(logger.isDebugEnabled()){
 				logger.debug("Child wasn't moved, folder needs to be created.");
 			}
-			NodeRef expenseFolder = fileFolderService.create(parent, expenseType, ContentModel.TYPE_FOLDER).getNodeRef();
+			NodeRef expenseFolder = fileFolderService.create(parent, expenseType, QName.createQName(MyCoBehaviorModel.NAMESPACE_MYCO_BEHAVIOR_MODEL, MyCoBehaviorModel.TYPE_MYB_EXPENSE_FOLDER)).getNodeRef();
+			nodeService.setProperty(expenseFolder, QName.createQName(MyCoBehaviorModel.NAMESPACE_MYCO_BEHAVIOR_MODEL, MyCoBehaviorModel.TYPE_MYB_EXPENSE_SUM), 0.0);
+			if(logger.isDebugEnabled()) {
+				logger.debug("Expense Folder is created, and the property expeseSum was added.");
+			}
 			
 			if(logger.isDebugEnabled()){
 				logger.debug("expenseFolder created with nodeRef: " + expenseFolder.toString());

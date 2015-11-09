@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<model name="myc:contentModel" xmlns="http://www.alfresco.org/model/dictionary/1.0">
+<model name="myb:behaviorModel" xmlns="http://www.alfresco.org/model/dictionary/1.0">
 
     <!-- Optional meta-data about the model -->
     <description>Document Model for Behavior-Demo-Repo Extension X</description>
@@ -17,20 +17,22 @@
 
     <!-- Custom namespace for your domain -->
     <namespaces>
-        <namespace uri="http://www.mycompany.com/model/content/1.0" prefix="myb"/>
+        <namespace uri="http://www.mycompany.com/model/behavior/1.0" prefix="myb"/>
     </namespaces>
 
     <!-- ===============================================================================================================
         Constraints, Types, and Aspects go here...
         -->
-	<aspect name="my:totalExpense">
-	    <title>MyCo Total Expense</title>
-	    <properties>
-	    	<property name="my:cost">
-	    		<type>d:double</type>
-	    		<mandatory>false</mandatory>
-	    		<default>0.0</default>
-	   		</property>
-	   	</properties>
-	</aspect>
+    <types>    
+	    <type name="myb:expenseFolder">
+	    	<title>MyCo Expense Folder</title>
+	    	<parent>cm:folder</parent>
+	    	<properties>
+		    	<property name="myb:expenseSum">
+		    		<type>d:double</type>
+		    		<mandatory>true</mandatory>
+		   		</property>
+		   	</properties>    	
+    	</type>
+    </types>
 </model>

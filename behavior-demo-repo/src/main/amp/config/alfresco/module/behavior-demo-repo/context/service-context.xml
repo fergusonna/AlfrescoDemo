@@ -32,4 +32,13 @@
         <property name="nodeLocatorService" ref="nodeLocatorService" />
     </bean>
     
+    
+    <bean id="sumExpenseBehavior" class="com.nick.behavior.SumExpense" init-method="init">
+    	<property name="nodeService">
+	        <ref bean="NodeService" />
+	    </property>
+	    <property name="policyComponent">
+	        <ref bean="policyComponent" />
+	    </property>
+    </bean>
 </beans>
