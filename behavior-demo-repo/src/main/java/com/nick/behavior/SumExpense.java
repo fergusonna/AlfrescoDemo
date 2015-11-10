@@ -2,7 +2,8 @@ package com.nick.behavior;
 
 import java.util.List;
 
-import org.alfresco.repo.node.NodeServicePolicies;
+import org.alfresco.repo.node.NodeServicePolicies.OnCreateChildAssociationPolicy;
+import org.alfresco.repo.node.NodeServicePolicies.OnDeleteChildAssociationPolicy;
 import org.alfresco.repo.policy.Behaviour;
 import org.alfresco.repo.policy.JavaBehaviour;
 import org.alfresco.repo.policy.PolicyComponent;
@@ -18,15 +19,15 @@ import org.alfresco.model.ContentModel;
 import com.nick.model.MyCoBehaviorModel;
 import com.nick.model.MyCoModel;
 
-public class SumExpense implements NodeServicePolicies.OnDeleteNodePolicy, NodeServicePolicies.OnCreateNodePolicy{
+public class SumExpense implements OnCreateChildAssociationPolicy, OnDeleteChildAssociationPolicy{
 
 	
 	private NodeService nodeService;
 	private PolicyComponent policyComponent;
 	
 	// Behaviours
-    private Behaviour onCreateNode;
-    private Behaviour onDeleteNode;
+    private Behaviour onCreateChildAssociation;
+    private Behaviour onDeleteChildAssociation;
 	
 	private Logger logger = Logger.getLogger(SumExpense.class);
 	
@@ -34,36 +35,41 @@ public class SumExpense implements NodeServicePolicies.OnDeleteNodePolicy, NodeS
 		if (logger.isDebugEnabled()) logger.debug("Initializing SumExpense behavior");
 		
 		//Create behaviours
-		this.onCreateNode = new JavaBehaviour(this, "onCreateNode", NotificationFrequency.TRANSACTION_COMMIT);
-		this.onDeleteNode = new JavaBehaviour(this, "onDeleteNode", NotificationFrequency.TRANSACTION_COMMIT);
+		this.onCreateChildAssociation = new JavaBehaviour(this, "onCreateChildAssociation" , NotificationFrequency.TRANSACTION_COMMIT);
+		this.onDeleteChildAssociation = new JavaBehaviour(this, "onDeleteChildAssociation" , NotificationFrequency.TRANSACTION_COMMIT);
 		
 		//Bind behaviours to node policies
-		this.policyComponent.bindClassBehaviour(QName.createQName(NamespaceService.ALFRESCO_URI, "onCreateNode"),
-				QName.createQName(MyCoBehaviorModel.NAMESPACE_MYCO_BEHAVIOR_MODEL,
-						MyCoBehaviorModel.TYPE_MYB_EXPENSE_FOLDER),
-						this.onCreateNode);
-		this.policyComponent.bindClassBehaviour(QName.createQName(NamespaceService.ALFRESCO_URI, "onDeleteNode"),
-				QName.createQName(MyCoBehaviorModel.NAMESPACE_MYCO_BEHAVIOR_MODEL,
-						MyCoBehaviorModel.TYPE_MYB_EXPENSE_FOLDER),
-						this.onDeleteNode);
+		this.policyComponent.bindAssociationBehaviour(QName.createQName(NamespaceService.ALFRESCO_URI, "onCreateChildAssociation"),
+				ContentModel.TYPE_CONTENT,
+				this.onCreateChildAssociation);
+		this.policyComponent.bindAssociationBehaviour(QName.createQName(NamespaceService.ALFRESCO_URI, "onDeleteChildAssociation"),
+				ContentModel.TYPE_CONTENT,
+				this.onDeleteChildAssociation);
+		
 	}
 	
 	@Override
-	public void onCreateNode(ChildAssociationRef childAssocRef) {
-		if (logger.isDebugEnabled()) logger.debug("Inside onCreateNode");
+	public void onCreateChildAssociation(ChildAssociationRef childAssocRef, boolean arg1) {
+		if (logger.isDebugEnabled()){
+			logger.debug("Inside onCreateChildAssociation");
+		}
 		
 		computeSum(childAssocRef);
 	}
 
 	@Override
-	public void onDeleteNode(ChildAssociationRef childAssocRef, boolean arg1) {
-		if (logger.isDebugEnabled()) logger.debug("Inside onDeleteNode");
+	public void onDeleteChildAssociation(ChildAssociationRef childAssocRef) {
+		if (logger.isDebugEnabled()){
+			logger.debug("Inside onDeleteChildAssociation");
+		}
 		
 		computeSum(childAssocRef);
 	}
-	
+			
 	public void computeSum(ChildAssociationRef childAssocRef){
-		if (logger.isDebugEnabled()) logger.debug("Inside computeSum");
+		if (logger.isDebugEnabled()){
+			logger.debug("Inside computeSum");
+		}
 		
 		//get the parent node
 		NodeRef parentRef = childAssocRef.getParentRef();
@@ -74,17 +80,20 @@ public class SumExpense implements NodeServicePolicies.OnDeleteNodePolicy, NodeS
 				logger.debug("parentRef exists");
 			}
 		}
-		if (nodeService.getType(parentRef).isMatch(QName.createQName(MyCoBehaviorModel.NAMESPACE_MYCO_BEHAVIOR_MODEL, MyCoBehaviorModel.TYPE_MYB_EXPENSE_FOLDER))){
+		if (nodeService.getType(parentRef).equals(QName.createQName(MyCoBehaviorModel.NAMESPACE_MYCO_BEHAVIOR_MODEL, MyCoBehaviorModel.TYPE_MYB_EXPENSE_FOLDER))){
 			
 			if (logger.isDebugEnabled()){
 				String parentType = nodeService.getType(parentRef).toString();
 				logger.debug("parentRef's type matches the type MYB_ExpenseFolder");
 				logger.debug("parent type is " + parentType);
 			}
-			
 		} else {
-			if (logger.isDebugEnabled()) logger.debug("Parent node doesn't exist or isn't an expenseReport");
-			//return; //ends if fails test
+			if (logger.isDebugEnabled()){
+				logger.debug("Parent node isn't an expenseFolder");
+				String parentType = nodeService.getType(parentRef).toString();
+				logger.debug("parent type is " + parentType);
+			}
+			return; //ends if fails test
 		}
 		
 		//get all children of the parent
@@ -94,36 +103,43 @@ public class SumExpense implements NodeServicePolicies.OnDeleteNodePolicy, NodeS
 		
 		//for each child, if it is an expenseReport, get its totalAmount value and add it to a running sum. 
 		if(children.size() == 0){
-			if (logger.isDebugEnabled()) logger.debug("No children found.");
+			if (logger.isDebugEnabled()){
+				logger.debug("No children found.");
+			}
 		} else {
 			for (ChildAssociationRef child : children){
-				if (!child.getTypeQName().isMatch(QName.createQName(MyCoModel.NAMESPACE_MYCO_CONTENT_MODEL, MyCoModel.TYPE_MY_EXPENSE_REPORT))){
+				if (!child.getTypeQName().equals(QName.createQName(MyCoModel.NAMESPACE_MYCO_CONTENT_MODEL, MyCoModel.TYPE_MY_EXPENSE_REPORT))){
 					if (logger.isDebugEnabled()){ 
 						logger.debug("Child is not an expense report.");
 						String childType = nodeService.getType(child.getChildRef()).toString();
 						logger.debug("child type is " + childType);
 					}
 				} else {
-					if (logger.isDebugEnabled()) logger.debug("Getting value.");
+					if (logger.isDebugEnabled()){
+						logger.debug("Getting value.");
+					}
 					
 					double expenseValue = 0.0;
-					expenseValue = (Double)nodeService.getProperty(child.getChildRef(), QName.createQName(MyCoModel.NAMESPACE_MYCO_CONTENT_MODEL, MyCoModel.PROP_MY_TOTAL_AMOUNT));
+					expenseValue = (double)nodeService.getProperty(child.getChildRef(), QName.createQName(MyCoModel.NAMESPACE_MYCO_CONTENT_MODEL, MyCoModel.PROP_MY_TOTAL_AMOUNT));
 					
-					if (logger.isDebugEnabled()) logger.debug("expenseValue: " + expenseValue + " Property value: "
-							+ (Double)nodeService.getProperty(child.getChildRef(), QName.createQName(MyCoModel.NAMESPACE_MYCO_CONTENT_MODEL, MyCoModel.PROP_MY_TOTAL_AMOUNT)) );
+					if (logger.isDebugEnabled()){
+						logger.debug("expenseValue: " + expenseValue + " Property value: "
+								+ (double)nodeService.getProperty(child.getChildRef(), QName.createQName(MyCoModel.NAMESPACE_MYCO_CONTENT_MODEL, MyCoModel.PROP_MY_TOTAL_AMOUNT)) );
+					}
+							
 					expenseSum += expenseValue;
 				}
 			}
 		}
 		
 		//Set the sum property on the parent
-		nodeService.setProperty(parentRef, QName.createQName(MyCoBehaviorModel.NAMESPACE_MYCO_BEHAVIOR_MODEL,	MyCoBehaviorModel.TYPE_MYB_EXPENSE_SUM), expenseSum);
+		nodeService.setProperty(parentRef, QName.createQName(MyCoBehaviorModel.NAMESPACE_MYCO_BEHAVIOR_MODEL,	MyCoBehaviorModel.PROP_MYB_EXPENSE_SUM), expenseSum);
 		
 		if(logger.isDebugEnabled()){
 			String parentName = (String)nodeService.getProperty(parentRef, ContentModel.PROP_NAME);
 			logger.debug("Setting expenseSum on " + parentName + "");
 			logger.debug("expenseSum = " + expenseSum);
-			double value = (double) nodeService.getProperty(parentRef, QName.createQName(MyCoBehaviorModel.NAMESPACE_MYCO_BEHAVIOR_MODEL,	MyCoBehaviorModel.TYPE_MYB_EXPENSE_SUM));
+			double value = (double) nodeService.getProperty(parentRef, QName.createQName(MyCoBehaviorModel.NAMESPACE_MYCO_BEHAVIOR_MODEL,	MyCoBehaviorModel.PROP_MYB_EXPENSE_SUM));
 			logger.debug(parentName + "'s expenseSum = " + value);
 		}
 		
@@ -147,7 +163,8 @@ public class SumExpense implements NodeServicePolicies.OnDeleteNodePolicy, NodeS
 
 	public void setPolicyComponent(PolicyComponent policyComponent) {
 		this.policyComponent = policyComponent;
-	}	
+	}
+
 }
 
 

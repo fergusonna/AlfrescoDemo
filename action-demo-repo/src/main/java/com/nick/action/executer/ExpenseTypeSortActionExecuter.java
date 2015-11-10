@@ -139,7 +139,7 @@ public class ExpenseTypeSortActionExecuter extends ActionExecuterAbstractBase{
 				logger.debug("Child wasn't moved, folder needs to be created.");
 			}
 			NodeRef expenseFolder = fileFolderService.create(parent, expenseType, QName.createQName(MyCoBehaviorModel.NAMESPACE_MYCO_BEHAVIOR_MODEL, MyCoBehaviorModel.TYPE_MYB_EXPENSE_FOLDER)).getNodeRef();
-			nodeService.setProperty(expenseFolder, QName.createQName(MyCoBehaviorModel.NAMESPACE_MYCO_BEHAVIOR_MODEL, MyCoBehaviorModel.TYPE_MYB_EXPENSE_SUM), 0.0);
+			nodeService.setProperty(expenseFolder, QName.createQName(MyCoBehaviorModel.NAMESPACE_MYCO_BEHAVIOR_MODEL, MyCoBehaviorModel.PROP_MYB_EXPENSE_SUM), 0.0);
 			if(logger.isDebugEnabled()) {
 				logger.debug("Expense Folder is created, and the property expeseSum was added.");
 			}

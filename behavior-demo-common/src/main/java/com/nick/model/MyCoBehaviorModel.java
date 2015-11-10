@@ -9,6 +9,6 @@ public interface MyCoBehaviorModel {
 	public static final String TYPE_MYB_EXPENSE_FOLDER = "expenseFolder";
 	
 	//Properties
-	public static final String TYPE_MYB_EXPENSE_SUM = "expenseSum";
+	public static final String PROP_MYB_EXPENSE_SUM = "expenseSum";
 	
 }
