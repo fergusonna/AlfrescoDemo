@@ -40,10 +40,10 @@ public class SumExpense implements OnCreateChildAssociationPolicy, OnDeleteChild
 		
 		//Bind behaviours to node policies
 		this.policyComponent.bindAssociationBehaviour(QName.createQName(NamespaceService.ALFRESCO_URI, "onCreateChildAssociation"),
-				ContentModel.TYPE_CONTENT,
+				ContentModel.TYPE_FOLDER,
 				this.onCreateChildAssociation);
 		this.policyComponent.bindAssociationBehaviour(QName.createQName(NamespaceService.ALFRESCO_URI, "onDeleteChildAssociation"),
-				ContentModel.TYPE_CONTENT,
+				ContentModel.TYPE_FOLDER,
 				this.onDeleteChildAssociation);
 		
 	}
